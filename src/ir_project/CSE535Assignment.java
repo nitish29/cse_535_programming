@@ -67,7 +67,7 @@ public class CSE535Assignment {
         Integer size = 0;
 
 
-        //System.out.println(line);
+        System.out.println(line);
         String[] part = line.split("\\\\");
         key = part[0];
         size = Integer.parseInt(part[1].split("c")[1]);

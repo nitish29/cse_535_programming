@@ -2,6 +2,7 @@ package ir_project;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.ListIterator;
 
 /**
  * Created by nitish on 10/15/15.
@@ -39,6 +40,14 @@ public class IndexBuilder {
     // This function sorts the posting according to increasing Document Ids
 
     public static LinkedList<Document> sortDocumentLinkedList ( LinkedList<Document> postingList ) {
+
+        ListIterator<Document> listIterator = postingList.listIterator();
+
+        while ( listIterator.hasNext() ) {
+
+            System.out.println(listIterator.next().documentId);
+
+        }
 
         LinkedList<Document> sortedList = postingList;
         return sortedList;
