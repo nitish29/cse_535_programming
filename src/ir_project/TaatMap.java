@@ -1,6 +1,7 @@
 package ir_project;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -8,11 +9,18 @@ import java.util.Map;
  */
 public class TaatMap {
 
-    Map<Keyword, Document> TermMap = new HashMap<>();
+    HashMap<Keyword, LinkedList<Document>> termMap;
 
-    public TaatMap(Map<Keyword, Document> termMap) {
+    public TaatMap( Keyword termData, LinkedList<Document> postingList ) {
 
-        TermMap = termMap;
+        this.termMap = new HashMap<>();
+        //termMap.put(termData, postingList);
+
+    }
+
+    public void putData ( Keyword termData, LinkedList<Document> postingList ) {
+
+        termMap.put(termData, postingList);
 
     }
 }

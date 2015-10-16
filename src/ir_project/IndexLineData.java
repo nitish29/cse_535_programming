@@ -1,5 +1,6 @@
 package ir_project;
 
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -7,15 +8,13 @@ import java.util.List;
  */
 public class IndexLineData {
 
-    Keyword term;
+    Keyword termData;
     Integer frequency;
-    List<Document> documentList;
-    Integer size;
+    LinkedList<Document> postingList;
 
-    public IndexLineData(Keyword term, Integer frequency, List<Document> documentList, Integer size) {
-        this.term = term;
+    public IndexLineData(Keyword termData, Integer frequency, LinkedList<Document> postingList ) {
+        this.termData = termData;
         this.frequency = frequency;
-        this.documentList = documentList;
-        this.size = size;
+        this.postingList = postingList;
     }
 }
