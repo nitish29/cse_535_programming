@@ -25,20 +25,28 @@ public class CSE535Assignment {
             FileReader fileReader = new FileReader(file_name);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
 
-            //DaatMap documentMap = new DaatMap();
-
-            IndexBuilder Builder = new IndexBuilder();
+            IndexBuilder builder = new IndexBuilder();
 
 
             while ((line = bufferedReader.readLine()) != null) {
 
                 IndexLineData initialData = ParseData(line);
-                Builder.buildIndex(initialData.termData, initialData.postingList);
-                break;
+                builder.buildIndex(initialData.termData, initialData.postingList);
+                //break;
 
             }
 
             bufferedReader.close();
+
+            HashMap termMap = builder.fetchTAATMap();
+            HashMap documentMap = builder.fetchDAATMap();
+
+
+
+            System.out.println(termMap.size());
+            System.out.println(documentMap.size());
+
+
 
 
         } catch (Exception e) {
@@ -67,7 +75,7 @@ public class CSE535Assignment {
         Integer size = 0;
 
 
-        System.out.println(line);
+        //System.out.println(line);
         String[] part = line.split("\\\\");
         key = part[0];
         size = Integer.parseInt(part[1].split("c")[1]);

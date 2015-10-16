@@ -1,8 +1,7 @@
 package ir_project;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.ListIterator;
+import java.text.Collator;
+import java.util.*;
 
 /**
  * Created by nitish on 10/15/15.
@@ -21,17 +20,33 @@ public class IndexBuilder {
 
     public HashMap fetchDAATMap () {
 
+        return this.documentMap;
+
+    }
+
+    public HashMap fetchTAATMap () {
+
         return this.termMap;
 
     }
 
     public void buildIndex ( Keyword termData, LinkedList<Document> postingList) {
 
-        System.out.println( termData );
-        System.out.println(postingList);
-
         LinkedList<Document> sortedDocumentPostingList = IndexBuilder.sortDocumentLinkedList ( postingList );
+        LinkedList<Document> sortedTermPostingList = IndexBuilder.sortTermLinkedList(postingList);
+
+
+//        ListIterator<Document> listIterator = sortedTermPostingList.listIterator();
+//
+//        while ( listIterator.hasNext() ) {
+//
+//            System.out.println(listIterator.next().documentId);
+//
+//        }
+
+
         documentMap.put(termData, sortedDocumentPostingList);
+        termMap.put(termData, sortedTermPostingList);
 
 
 
@@ -41,13 +56,43 @@ public class IndexBuilder {
 
     public static LinkedList<Document> sortDocumentLinkedList ( LinkedList<Document> postingList ) {
 
-        ListIterator<Document> listIterator = postingList.listIterator();
+        postingList.sort(new Comparator<Document>() {
+            @Override
+            public int compare(Document o1, Document o2) {
 
-        while ( listIterator.hasNext() ) {
+                return o1.documentId.compareTo( o2.documentId );
 
-            System.out.println(listIterator.next().documentId);
+//                if ( o1.documentId < o2.documentId ){
+//
+//                    return -1;
+//
+//                } else if ( o1.documentId > o2.documentId ) {
+//
+//                    return 1;
+//
+//                }
+//                return 0;
+            }
+        });
 
-        }
+
+        LinkedList<Document> sortedList = postingList;
+        return sortedList;
+
+    }
+
+    // This function sorts the posting according to decreasing term frequencies
+
+    public static LinkedList<Document> sortTermLinkedList ( LinkedList<Document> postingList ) {
+
+        postingList.sort(new Comparator<Document>() {
+            @Override
+            public int compare(Document o1, Document o2) {
+
+                return o2.term_frequency.compareTo( o1.term_frequency );
+
+            }
+        });
 
         LinkedList<Document> sortedList = postingList;
         return sortedList;

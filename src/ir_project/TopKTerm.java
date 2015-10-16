@@ -12,4 +12,10 @@ public class TopKTerm {
         this.term = term;
         this.postingListSize = postingListSize;
     }
+
+    public String getTopKTerms( Integer n ) {
+
+        return "";
+
+    }
 }
