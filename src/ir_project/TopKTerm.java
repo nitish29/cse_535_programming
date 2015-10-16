@@ -5,10 +5,10 @@ package ir_project;
  */
 public class TopKTerm {
 
-    String term;
+    Keyword term;
     Integer postingListSize;
 
-    public TopKTerm(String term, Integer postingListSize) {
+    public TopKTerm(Keyword term, Integer postingListSize) {
         this.term = term;
         this.postingListSize = postingListSize;
     }

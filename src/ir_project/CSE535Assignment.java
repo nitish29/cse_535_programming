@@ -16,9 +16,11 @@ public class CSE535Assignment {
 
         try {
 
-            //String file_name = "/Users/nitish/Downloads/termData (2).idx";
+            //String file_name = "/Users/nitish/Downloads/term (2).idx";
             String file_name = args[0];
             String log_file_name = args[1];
+//            int topKInputValue = Integer.parseInt( args[2] );
+//            String queryFileName = args[3];
             String line = "null";
 
 
@@ -27,24 +29,30 @@ public class CSE535Assignment {
 
             IndexBuilder builder = new IndexBuilder();
 
-
             while ((line = bufferedReader.readLine()) != null) {
 
                 IndexLineData initialData = ParseData(line);
-                builder.buildIndex(initialData.termData, initialData.postingList);
+                builder.buildIndex(initialData.term, initialData.postingList);
                 //break;
 
             }
 
             bufferedReader.close();
 
+
             HashMap termMap = builder.fetchTAATMap();
             HashMap documentMap = builder.fetchDAATMap();
+            ArrayList<TopKTerm> termList = builder.fetchTopKTermList();
+            ArrayList<TopKTerm> sortedTopKTermList = builder.sortTopKTerms( termList );
 
 
+            //System.out.println(sortedTopKTermList.size());
+            //System.out.println(termMap.size());
+            //System.out.println(documentMap.size());
 
-            System.out.println(termMap.size());
-            System.out.println(documentMap.size());
+            for (TopKTerm term : sortedTopKTermList) {
+                System.out.println(term.postingListSize + " " + term.term.term);
+            }
 
 
 
@@ -63,7 +71,7 @@ public class CSE535Assignment {
 	 *  - store all the split parts in different variables
 	 *  - split the second variable to extract the posting size
 	 *  - split the third variable to retrieve the document id and frequency
-	 *  - make a new document object with the retrieved document id and termData freq
+	 *  - make a new document object with the retrieved document id and term freq
 	 *  - store the document object in a linked list
 	 *  -
 	 *
@@ -81,7 +89,9 @@ public class CSE535Assignment {
         size = Integer.parseInt(part[1].split("c")[1]);
         String[] each_posting_entry = (part[2].split("m")[1]).replaceAll("\\[|\\]", "").split(",");
 
-        Keyword keywordData = new Keyword( key, size );
+        Keyword keyword = new Keyword( key, size );
+
+
 
         Integer totalFrequency = 0;
 
@@ -100,7 +110,7 @@ public class CSE535Assignment {
 
         }
 
-        IndexLineData data = new IndexLineData( keywordData, totalFrequency, postingList );
+        IndexLineData data = new IndexLineData( keyword, totalFrequency, postingList );
 
         return data;
 
