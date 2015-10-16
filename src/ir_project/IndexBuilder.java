@@ -27,17 +27,22 @@ public class IndexBuilder {
     public void buildIndex ( Keyword termData, LinkedList<Document> postingList) {
 
         System.out.println( termData );
-        System.out.println( postingList );
+        System.out.println(postingList);
 
-        //LinkedList<Document> sortedDocumentPostingList = IndexBuilder.sortDocumentLinkedList ( LinkedList<Document> );
+        LinkedList<Document> sortedDocumentPostingList = IndexBuilder.sortDocumentLinkedList ( postingList );
+        documentMap.put(termData, sortedDocumentPostingList);
+
+
 
     }
 
-//    public static LinkedList<Document> sortDocumentLinkedList (  ) {
-    public static void sortDocumentLinkedList (  ) {
+    // This function sorts the posting according to increasing Document Ids
 
-        LinkedList<Document> sortedList ;
-        //return sortedList;
+    public static LinkedList<Document> sortDocumentLinkedList ( LinkedList<Document> postingList ) {
+
+        LinkedList<Document> sortedList = postingList;
+        return sortedList;
+
     }
 
 

@@ -34,7 +34,6 @@ public class CSE535Assignment {
 
                 IndexLineData initialData = ParseData(line);
                 Builder.buildIndex(initialData.termData, initialData.postingList);
-                
                 break;
 
             }
