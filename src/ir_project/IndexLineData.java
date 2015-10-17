@@ -7,11 +7,11 @@ import java.util.LinkedList;
  */
 public class IndexLineData {
 
-    Keyword term;
+    String term;
     Integer frequency;
     LinkedList<Document> postingList;
 
-    public IndexLineData(Keyword term, Integer frequency, LinkedList<Document> postingList ) {
+    public IndexLineData(String term, Integer frequency, LinkedList<Document> postingList ) {
         this.term = term;
         this.frequency = frequency;
         this.postingList = postingList;

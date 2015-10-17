@@ -8,8 +8,8 @@ import java.util.*;
  */
 public class IndexBuilder {
 
-    HashMap< Keyword, LinkedList<Document>> termMap;
-    HashMap< Keyword, LinkedList<Document>> documentMap;
+    HashMap< String, LinkedList<Document>> termMap;
+    HashMap< String, LinkedList<Document>> documentMap;
     ArrayList<TopKTerm> topTerm;
 
     public IndexBuilder() {
@@ -38,7 +38,7 @@ public class IndexBuilder {
 
     }
 
-    public void buildIndex ( Keyword term, LinkedList<Document> postingList) {
+    public void buildIndex ( String term, LinkedList<Document> postingList) {
 
         LinkedList<Document> sortedDocumentPostingList = IndexBuilder.sortDocumentLinkedList ( postingList );
         LinkedList<Document> sortedTermPostingList = IndexBuilder.sortTermLinkedList( postingList );
@@ -116,9 +116,6 @@ public class IndexBuilder {
 
 
     // Reference function section
-
-    //        ListIterator<Document> listIterator = sortedTermPostingList.listIterator();
-    //
     //        while ( listIterator.hasNext() ) {
     //
     //            System.out.println(listIterator.next().documentId);

@@ -19,8 +19,8 @@ public class CSE535Assignment {
             //String file_name = "/Users/nitish/Downloads/term (2).idx";
             String file_name = args[0];
             String log_file_name = args[1];
-//            int topKInputValue = Integer.parseInt( args[2] );
-//            String queryFileName = args[3];
+            int topKInputValue = Integer.parseInt( args[2] );
+            String queryFileName = args[3];
             String line = "null";
 
 
@@ -44,15 +44,15 @@ public class CSE535Assignment {
             HashMap documentMap = builder.fetchDAATMap();
             ArrayList<TopKTerm> termList = builder.fetchTopKTermList();
             ArrayList<TopKTerm> sortedTopKTermList = builder.sortTopKTerms( termList );
+            QueryBuilder.executeQuery( queryFileName, termMap, documentMap, sortedTopKTermList, topKInputValue );
 
+            //TODO : method displaying concatenated strings
+//            String topTerm = TopKTerm.getTopKTerms( sortedTopKTermList, topKInputValue );
+//            //System.out.println(topTerm);
+//            for (TopKTerm term : sortedTopKTermList) {
+//                System.out.println(term.postingListSize + " " + term.term );
+//            }
 
-            //System.out.println(sortedTopKTermList.size());
-            //System.out.println(termMap.size());
-            //System.out.println(documentMap.size());
-
-            for (TopKTerm term : sortedTopKTermList) {
-                System.out.println(term.postingListSize + " " + term.term.term);
-            }
 
 
 
@@ -80,7 +80,7 @@ public class CSE535Assignment {
     public static IndexLineData ParseData(String line) {
 
         String key = "null";
-        Integer size = 0;
+        int size = 0;
 
 
         //System.out.println(line);
@@ -89,11 +89,10 @@ public class CSE535Assignment {
         size = Integer.parseInt(part[1].split("c")[1]);
         String[] each_posting_entry = (part[2].split("m")[1]).replaceAll("\\[|\\]", "").split(",");
 
-        Keyword keyword = new Keyword( key, size );
+        //Keyword keyword = new Keyword( key, size );
 
 
-
-        Integer totalFrequency = 0;
+        int totalFrequency = 0;
 
         LinkedList<Document> postingList = new LinkedList<>();
 
@@ -101,8 +100,8 @@ public class CSE535Assignment {
         for (String single_posting_entry : each_posting_entry) {
 
             String[] doc_id_term_freq_array = single_posting_entry.split("/");
-            Integer documentId = Integer.parseInt(doc_id_term_freq_array[0].trim());
-            Integer termFrequency = Integer.parseInt(doc_id_term_freq_array[1]);
+            int documentId = Integer.parseInt(doc_id_term_freq_array[0].trim());
+            int termFrequency = Integer.parseInt(doc_id_term_freq_array[1]);
             totalFrequency = totalFrequency + termFrequency;
 
             Document new_document = new Document(documentId, termFrequency);
@@ -110,7 +109,7 @@ public class CSE535Assignment {
 
         }
 
-        IndexLineData data = new IndexLineData( keyword, totalFrequency, postingList );
+        IndexLineData data = new IndexLineData( key, totalFrequency, postingList );
 
         return data;
 
