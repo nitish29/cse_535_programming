@@ -48,7 +48,6 @@ public class IndexBuilder {
         termMap.put(term, sortedTermPostingList);
 
 
-
     }
 
 

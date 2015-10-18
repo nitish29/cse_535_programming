@@ -16,7 +16,6 @@ public class CSE535Assignment {
 
         try {
 
-            //String file_name = "/Users/nitish/Downloads/term (2).idx";
             String file_name = args[0];
             String log_file_name = args[1];
             int topKInputValue = Integer.parseInt( args[2] );
@@ -48,7 +47,6 @@ public class CSE535Assignment {
 
             //TODO : method displaying concatenated strings
 //            String topTerm = TopKTerm.getTopKTerms( sortedTopKTermList, topKInputValue );
-//            //System.out.println(topTerm);
 //            for (TopKTerm term : sortedTopKTermList) {
 //                System.out.println(term.postingListSize + " " + term.term );
 //            }

@@ -1,5 +1,6 @@
 package ir_project;
 
+import javax.print.Doc;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.*;
@@ -7,7 +8,23 @@ import java.util.*;
 /**
  * Created by nitish on 10/16/15.
  */
+
+/*
+    In Loop:
+    * read single keyword line
+    * get all the query terms in a string array for the fetched line
+    * loop over the terms in the string array
+    * store each posting in an array list
+    * TAATAnd logic
+        *
+
+    -
+
+
+ */
+
 public class QueryBuilder {
+
 
 
     public static void executeQuery( String queryFileName, HashMap< String, LinkedList<Document>> termMap, HashMap< String, LinkedList<Document>> documentMap, ArrayList<TopKTerm> sortedTopKTermList, int topKInputValue ) {
@@ -22,21 +39,11 @@ public class QueryBuilder {
 
             //execute topK over here
 
-
-
             while ((line = bufferedReader.readLine()) != null) {
 
                 termList = FetchLineData(line);
-                for (String s: termList) {
 
-                    LinkedList<Document> postingList = getPostingList( termMap, s );
-                    //System.out.println(postingList.size());
-                    System.out.println(termMap.get( s ).getFirst().documentId);
-                    System.exit(0);
-                }
-
-
-
+                QueryBuilder.termAtATimeQueryAnd( termList, termMap );
 
                 //do more steps posting and-ing or-ing topK-ing for each term list
 
@@ -64,11 +71,83 @@ public class QueryBuilder {
 
     public static void termAtATimeQueryAnd( String[] termList, HashMap< String, LinkedList<Document>> termMap ) {
 
+        try {
+
+            ArrayList<LinkedList<Document>> list = new ArrayList<>();
+
+            for ( String s: termList ) {
+
+                LinkedList<Document> postingListTerm = getPostingList( termMap, s );
+                //log the posting list terms in the log file either in this function or in getPostingList function
+                list.add( postingListTerm );
+            }
+
+
+            LinkedList<Document> termFilterPostingList = list.get( 0 );
+            ListIterator<Document> filterPostingListIterator = termFilterPostingList.listIterator();
+
+//            // Debug code lines
+            System.out.println( termFilterPostingList.size() );
+            //System.out.println( list.get(1).size() );
+
+//            for ( int i =0 ; i < termFilterPostingList.size(); i++ ) {
+//                System.out.println(termFilterPostingList.get( i ).documentId + "," +termFilterPostingList.get( i ).term_frequency);
+//            }
+//
+            //System.exit ( 0 );
+
+            for ( int i = 1; i < list.size(); i++ ) {
+
+                ListIterator<Document> arrayListLinkedListIterator = list.get(i).listIterator();
+
+                while ( filterPostingListIterator.hasNext() ) {
+
+                    while ( arrayListLinkedListIterator.hasNext() ) {
+
+                        int v = filterPostingListIterator.next().documentId;
+
+                        if ( v  == arrayListLinkedListIterator.next().documentId ) {
+
+                            //System.out.println( v );
+
+                            arrayListLinkedListIterator = list.get(i).listIterator();
+                            continue;
+
+                        } else   {
+
+                            filterPostingListIterator.previous();
+
+                        }
+
+                        if ( !arrayListLinkedListIterator.hasNext() ) {
+
+                            filterPostingListIterator.remove();
+                            arrayListLinkedListIterator = list.get(i).listIterator();
+                            break;
+
+                        }
+                        //System.out.println( "hello" );
+
+                    }
+
+                }
+
+            }
+
+            System.out.println( termFilterPostingList.size() );
+
+
+
+        } catch ( Exception e ) {
+
+            throw e;
+
+        }
 
 
     }
 
-    public static LinkedList<Document> getPostingList ( HashMap< String, LinkedList<Document>> map, String term ) {
+    public static LinkedList<Document> getPostingList( HashMap< String, LinkedList<Document>> map, String term ) {
 
         LinkedList<Document> postingList = map.get( term );
 //        for ( int i =0 ; i < postingList.size(); i++ ) {
