@@ -45,14 +45,6 @@ public class CSE535Assignment {
             ArrayList<TopKTerm> sortedTopKTermList = builder.sortTopKTerms( termList );
             QueryBuilder.executeQuery( queryFileName, termMap, documentMap, sortedTopKTermList, topKInputValue );
 
-            //TODO : method displaying concatenated strings
-//            String topTerm = TopKTerm.getTopKTerms( sortedTopKTermList, topKInputValue );
-//            for (TopKTerm term : sortedTopKTermList) {
-//                System.out.println(term.postingListSize + " " + term.term );
-//            }
-
-
-
 
 
         } catch (Exception e) {
