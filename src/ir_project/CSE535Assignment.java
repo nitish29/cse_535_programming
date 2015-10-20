@@ -72,15 +72,10 @@ public class CSE535Assignment {
         String key = "null";
         int size = 0;
 
-
-        //System.out.println(line);
         String[] part = line.split("\\\\");
         key = part[0];
         size = Integer.parseInt(part[1].split("c")[1]);
         String[] each_posting_entry = (part[2].split("m")[1]).replaceAll("\\[|\\]", "").split(",");
-
-        //Keyword keyword = new Keyword( key, size );
-
 
         int totalFrequency = 0;
 
