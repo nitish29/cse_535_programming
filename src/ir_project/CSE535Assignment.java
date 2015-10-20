@@ -21,12 +21,19 @@ public class CSE535Assignment {
             int topKInputValue = Integer.parseInt( args[2] );
             String queryFileName = args[3];
             String line = "null";
+            Log logger = new Log(log_file_name);
 
+            //log1.log("This is written in the first file");
+            //System.exit(0);
+
+
+            logger.log( "##########################################################################################" );
 
             FileReader fileReader = new FileReader(file_name);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
 
             IndexBuilder builder = new IndexBuilder();
+
 
             while ((line = bufferedReader.readLine()) != null) {
 
@@ -39,11 +46,14 @@ public class CSE535Assignment {
             bufferedReader.close();
 
 
-            HashMap termMap = builder.fetchTAATMap();
-            HashMap documentMap = builder.fetchDAATMap();
+            HashMap< String, LinkedList<Document>> termMap = builder.fetchTAATMap();
+            HashMap< String, LinkedList<Document>> documentMap = builder.fetchDAATMap();
             ArrayList<TopKTerm> termList = builder.fetchTopKTermList();
             ArrayList<TopKTerm> sortedTopKTermList = builder.sortTopKTerms( termList );
-            QueryBuilder.executeQuery( queryFileName, termMap, documentMap, sortedTopKTermList, topKInputValue );
+
+            QueryBuilder.executeQuery( queryFileName, termMap, documentMap, sortedTopKTermList, topKInputValue, logger );
+
+            logger.log("########################################################################################################");
 
 
 
@@ -56,14 +66,16 @@ public class CSE535Assignment {
     }
 
 	/*
-	 * ParseData Algorithm
+	 * ParseData Algorithm - For each line
 	 * 	- split the line based on "\"
 	 *  - store all the split parts in different variables
 	 *  - split the second variable to extract the posting size
 	 *  - split the third variable to retrieve the document id and frequency
 	 *  - make a new document object with the retrieved document id and term freq
 	 *  - store the document object in a linked list
-	 *  -
+	 *  - pass this data to IndexLineData class, by instantiating it
+	 *  - pass the IndexLineData object to IndexBuilder class
+	 *  - which creates HashMaps for DAAT and TAAT
 	 *
 	 *  */
 

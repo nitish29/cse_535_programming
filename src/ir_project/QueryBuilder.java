@@ -1,6 +1,5 @@
 package ir_project;
 
-import javax.print.Doc;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.*;
@@ -23,8 +22,7 @@ public class QueryBuilder {
 
 
 
-    public static void executeQuery( String queryFileName, HashMap< String, LinkedList<Document>> termMap, HashMap< String, LinkedList<Document>> documentMap, ArrayList<TopKTerm> sortedTopKTermList, int topKInputValue ) {
-
+    public static void executeQuery( String queryFileName, HashMap< String, LinkedList<Document>> termMap, HashMap< String, LinkedList<Document>> documentMap, ArrayList<TopKTerm> sortedTopKTermList, int topKInputValue, Log logger ) {
 
         try {
 
@@ -35,20 +33,17 @@ public class QueryBuilder {
 
             //execute topK over here
             //TODO : method displaying concatenated strings
-//            String topTerm = TopKTerm.getTopKTerms( sortedTopKTermList, topKInputValue );
-//            for (TopKTerm term : sortedTopKTermList) {
-//                System.out.println(term.postingListSize + " " + term.term );
-//            }
+            QueryBuilder.printTopKTerms(sortedTopKTermList, topKInputValue, logger);
 
 
             while ((line = bufferedReader.readLine()) != null) {
 
                 termList = FetchLineData(line);
 
-                //QueryBuilder.termAtATimeQueryAnd( termList, termMap );
-                QueryBuilder.termAtATimeQueryOR(termList, termMap);
+                QueryBuilder.termAtATimeQueryAnd( termList, termMap,documentMap, logger );
+                //QueryBuilder.termAtATimeQueryOr(termList, termMap);
+                //QueryBuilder.documentAtATimeQueryAnd(termList, documentMap);
 
-                //do more steps posting and-ing or-ing topK-ing for each term list
 
 
             }
@@ -72,60 +67,76 @@ public class QueryBuilder {
 
     }
 
-    public static void termAtATimeQueryAnd( String[] termList, HashMap< String, LinkedList<Document>> termMap ) {
+    public static void termAtATimeQueryAnd( String[] termList, HashMap< String, LinkedList<Document>> termMap, HashMap< String, LinkedList<Document>> documentMap, Log logger ) {
 
         try {
 
             ArrayList<LinkedList<Document>> list = new ArrayList<>();
 
+            int noOfDocs = 0;
+            int noOfComparisons = 0;
+            int noOfSeconds = 0;
+
+            LinkedList<Document> postingListTerm = new LinkedList<>();
+
             for ( String s: termList ) {
 
-                LinkedList<Document> postingListTerm = getPostingList( termMap, s );
-                //log the posting list terms in the log file either in this function or in getPostingList function
-                //print both the types of postings here - sorted by doc ID and Term freq - can make a call to another function which does that
-                list.add( postingListTerm );
+                postingListTerm = getPostingList( termMap, s );
+                LinkedList<Document> postingListDoc = getPostingList( documentMap, s );
+
+                if ( postingListTerm == null ) {
+
+                    QueryBuilder.printPostingList( s, postingListTerm, postingListDoc, logger );
+
+                } else {
+
+                    QueryBuilder.printPostingList( s, postingListTerm, postingListDoc, logger );
+                    list.add( postingListTerm );
+
+
+                }
+
             }
+            
 
 
-            LinkedList<Document> termFilterPostingList = list.get( 0 );
-            ListIterator<Document> filterPostingListIterator = termFilterPostingList.listIterator();
+            if ( postingListTerm != null ) {
 
-//            Debug code lines
-            System.out.println( termFilterPostingList.size() );
-//            System.out.println( list.get(1).size() );
+                LinkedList<Document> termFilterPostingList = list.get(0);
+                ListIterator<Document> filterPostingListIterator = termFilterPostingList.listIterator();
 
-//            for ( int i =0 ; i < termFilterPostingList.size(); i++ ) {
-//                System.out.println(termFilterPostingList.get( i ).documentId + "," +termFilterPostingList.get( i ).term_frequency);
-//            }
-//
-//            System.exit ( 0 );
+                System.out.println( termFilterPostingList.size() );
 
-            for ( int i = 1; i < list.size(); i++ ) {
+                for ( int i = 1; i < list.size(); i++ ) {
 
-                ListIterator<Document> arrayListLinkedListIterator = list.get(i).listIterator();
+                    ListIterator<Document> arrayListLinkedListIterator = list.get(i).listIterator();
 
-                while ( filterPostingListIterator.hasNext() ) {
+                    while ( filterPostingListIterator.hasNext() ) {
 
-                    while ( arrayListLinkedListIterator.hasNext() ) {
+                        while ( arrayListLinkedListIterator.hasNext() ) {
 
-                        int v = filterPostingListIterator.next().documentId;
+                            noOfComparisons++;
 
-                        if ( v  == arrayListLinkedListIterator.next().documentId ) {
+                            int v = filterPostingListIterator.next().documentId;
 
-                            arrayListLinkedListIterator = list.get(i).listIterator();
-                            continue;
+                            if ( v  == arrayListLinkedListIterator.next().documentId ) {
 
-                        } else   {
+                                arrayListLinkedListIterator = list.get(i).listIterator();
+                                continue;
 
-                            filterPostingListIterator.previous();
+                            } else   {
 
-                        }
+                                filterPostingListIterator.previous();
 
-                        if ( !arrayListLinkedListIterator.hasNext() ) {
+                            }
 
-                            filterPostingListIterator.remove();
-                            arrayListLinkedListIterator = list.get(i).listIterator();
-                            break;
+                            if ( !arrayListLinkedListIterator.hasNext() ) {
+
+                                filterPostingListIterator.remove();
+                                arrayListLinkedListIterator = list.get(i).listIterator();
+                                break;
+
+                            }
 
                         }
 
@@ -133,12 +144,30 @@ public class QueryBuilder {
 
                 }
 
+                noOfDocs = termFilterPostingList.size();
+
+                String displayTermList = QueryBuilder.getStringTerm( termList );
+                logger.log("FUNCTION: termAtATimeQueryAnd " + displayTermList);
+                logger.log( noOfDocs + " documents are found" );
+                logger.log( noOfComparisons + " comparisons are made");
+                logger.log( noOfSeconds + " seconds are used");
+                //logger.log( "Result: " + listOfReorderedDocIds);
+
+
+            } else {
+
+                String displayTermList = QueryBuilder.getStringTerm( termList );
+                logger.log("FUNCTION: termAtATimeQueryAnd " + displayTermList);
+                logger.log("terms not found");
+
             }
 
-            System.out.println( termFilterPostingList.size() );
-            for ( int i =0 ; i < termFilterPostingList.size(); i++ ) {
-                System.out.println(termFilterPostingList.get( i ).documentId + "," +termFilterPostingList.get( i ).term_frequency);
-            }
+
+//            for ( int i =0 ; i < termFilterPostingList.size(); i++ ) {
+//
+//                System.out.println(termFilterPostingList.get( i ).documentId + "," +termFilterPostingList.get( i ).term_frequency);
+//
+//            }
 
 
 
@@ -152,7 +181,7 @@ public class QueryBuilder {
 
     }
 
-    public static void termAtATimeQueryOR( String[] termList, HashMap< String, LinkedList<Document>> termMap ) {
+    public static void termAtATimeQueryOr( String[] termList, HashMap< String, LinkedList<Document>> termMap ) {
 
 
         try {
@@ -162,6 +191,7 @@ public class QueryBuilder {
             for ( String s: termList ) {
 
                 LinkedList<Document> postingListTerm = getPostingList( termMap, s );
+                //if list doesn't exist
                 list.add( postingListTerm );
             }
 
@@ -218,37 +248,7 @@ public class QueryBuilder {
 
     }
 
-
-
-    public static LinkedList<Document> getPostingList( HashMap< String, LinkedList<Document>> map, String term ) {
-
-        LinkedList<Document> postingList = map.get( term );
-//        for ( int i =0 ; i < postingList.size(); i++ ) {
-//            System.out.println(postingList.get( i ).documentId + "," +postingList.get( i ).term_frequency);
-//        }
-//        System.exit( 0 );
-        return postingList;
-
-    }
-
-
-    public static void getTopKTerms( ArrayList<TopKTerm> sortedTopKTermList, int topKInputValue ) {
-
-        String topK = "";
-
-        for ( int i = 0; i < topKInputValue; i++ ) {
-
-            //System.out.println(sortedList.get(i).term.term );
-
-            topK = String.join(" , ", Arrays.asList(sortedTopKTermList.get(i).term ));
-
-        }
-
-    }
-
-
-        /*public static void termAtATimeQueryOr( String[] termList, HashMap< String, LinkedList<Document>> termMap ) {
-
+    public static void documentAtATimeQueryAnd( String[] termList, HashMap< String, LinkedList<Document>> documentMap ) {
 
         try {
 
@@ -256,85 +256,182 @@ public class QueryBuilder {
 
             for ( String s: termList ) {
 
-                LinkedList<Document> postingListTerm = getPostingList( termMap, s );
-                list.add( postingListTerm );
-            }
+                LinkedList<Document> postingListDoc = documentMap.get( s );
 
-            int flag = 0;
-            LinkedList<Document> termFilterPostingList = list.get( 0 );
-            ListIterator<Document> filterPostingListIterator = termFilterPostingList.listIterator();
+                for ( int i = 0 ; i < postingListDoc.size(); i++ ) {
 
-            // Debug code lines
-            System.out.println( termFilterPostingList.size() );
-
-            for ( int i = 1; i < list.size(); i++ ) {
-
-                ListIterator<Document> arrayListLinkedListIterator = list.get(i).listIterator();
-
-                //if only one element in the filter list,
-
-
-                while ( filterPostingListIterator.hasNext() ) {
-
-                    while ( arrayListLinkedListIterator.hasNext() ) {
-
-                        int v = filterPostingListIterator.next().documentId;
-                        //System.out.println(v);
-                        Document c = arrayListLinkedListIterator.next();
-
-                        if ( v  == c.documentId ) {
-
-                            continue;
-
-                        } else   {
-
-                            //if not already exists then add
-                            for ( int j = 0 ; j < termFilterPostingList.size(); j++ ) {
-
-
-                                if (c.documentId.equals(termFilterPostingList.get(j).documentId)) {
-
-                                    flag = 1;
-                                    break;
-
-                                }
-                                flag = 0;
-
-                            }
-
-
-                            if ( flag == 0 ) {
-
-                                filterPostingListIterator.add( c );
-
-                            }
-
-
-
-                        }
-
-                    }
-
-                    break;
+                    System.out.println(postingListDoc.get( i ).documentId + "," + postingListDoc.get( i ).term_frequency);
 
                 }
+                System.out.println(s);
+                System.exit(0);
+
+                //LinkedList<Document> postingListTerm = getPostingList( documentMap, s );
+                //list.add( postingListTerm );
+            }
+
+
+            ArrayList compareList = new ArrayList( list.size() );
+            ArrayList finalDocList = new ArrayList();
+
+            //set up initial compare array
+
+            for ( int i = 0; i < list.size(); i++ ) {
+
+                System.out.println( list.get(i).element().documentId );
+                //compareList.add( 0, list.get(0).element());
 
             }
 
-            System.out.println( termFilterPostingList.size() );
+            for ( int j = 0; j < compareList.size(); j++ ) {
 
-//            for ( int i =0 ; i < termFilterPostingList.size(); i++ ) {
-//                System.out.println(termFilterPostingList.get( i ).documentId + "," +termFilterPostingList.get( i ).term_frequency);
-//            }
+                System.out.println(compareList.get(j) );
+
+            }
+
+
+
+
+
 
 
 
         } catch ( Exception e ) {
 
-            throw e;
+            e.printStackTrace();
 
         }
 
 
-    }*/
+    }
+
+
+
+    public static LinkedList<Document> getPostingList( HashMap< String, LinkedList<Document>> map, String term ) {
+
+        LinkedList<Document> postingList = map.get( term );
+
+        if ( postingList == null ) {
+
+            return null;
+
+        } else {
+
+
+            return postingList;
+
+        }
+
+
+
+    }
+
+
+    public static void printTopKTerms( ArrayList<TopKTerm> sortedTopKTermList, int topKInputValue, Log logger ) {
+
+        String topKList = "";
+
+        for ( int i = 0; i < topKInputValue; i++ ) {
+
+            topKList += sortedTopKTermList.get(i).term + ",";
+
+
+        }
+
+        String str = removeLastChar( topKList );
+        logger.log("FUNCTION: getTopK " + topKInputValue);
+        logger.log("Result: " + str);
+
+    }
+
+    public static String getStringTerm ( String[] termList ) {
+
+        String stringTerm="";
+
+        for ( String s: termList ) {
+
+            stringTerm += s + ",";
+        }
+
+        String str = removeLastChar( stringTerm );
+
+        return str;
+
+
+    }
+
+
+    public static void printPostingList ( String s, LinkedList<Document> postingListTerm, LinkedList<Document> postingListDoc, Log logger) {
+
+
+
+        try {
+
+
+            if ( postingListDoc == null ) {
+
+                logger.log("FUNCTION: getPostings " + s);
+                logger.log("term not found");
+
+
+            } else if ( (postingListDoc.size() == 0) && (postingListTerm.size() == 0) ) {
+
+                logger.log("FUNCTION: getPostings " + s);
+                logger.log("term not found");
+
+
+            } else {
+
+                String orderedByDocID = "";
+                String orderedByTermFreq = "";
+
+
+                for ( int i =0 ; i < postingListDoc.size(); i++ ) {
+
+                    orderedByDocID += postingListDoc.get(i).documentId + ",";
+
+                }
+
+                for ( int i =0 ; i < postingListTerm.size(); i++ ) {
+
+                    orderedByTermFreq += postingListTerm.get(i).documentId + ",";
+
+                }
+
+
+                String strDoc = removeLastChar( orderedByDocID );
+                String strTerm = removeLastChar( orderedByTermFreq );
+                logger.log("FUNCTION: getPostings " + s);
+                logger.log("Ordered by doc IDs: " + strDoc);
+                logger.log("Ordered by TF: " + strTerm);
+
+
+            }
+
+
+
+
+        } catch ( Exception e ) {
+
+            e.printStackTrace();
+
+        }
+
+
+    }
+
+    private static String removeLastChar(String str) {
+
+        if (str.length() > 0 && str.charAt(str.length()-1)== ',') {
+            str = str.substring(0, str.length()-1);
+        }
+        return str;
+
+        //return str.substring(0,str.length()-1);
+    }
+
+
+
+
+
 }
