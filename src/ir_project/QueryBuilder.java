@@ -41,7 +41,7 @@ public class QueryBuilder {
                 termList = FetchLineData(line);
 
                 QueryBuilder.termAtATimeQueryAnd( termList, termMap,documentMap, logger );
-                //QueryBuilder.termAtATimeQueryOr(termList, termMap);
+                QueryBuilder.termAtATimeQueryOr(termList, termMap, logger);
                 //QueryBuilder.documentAtATimeQueryAnd(termList, documentMap);
 
 
@@ -67,15 +67,32 @@ public class QueryBuilder {
 
     }
 
+    /*
+    * Algorithm for TAAT And
+    *
+    * Iterate over the list of terms passed - [ termList contains list of terms passed from executeQuery function call]
+    * fetch the posting list for each term and print it
+    *  - if the term doesn't exist, or is the posting list is empty - null value, call the printPostingList function ( which prints term not found )
+    *  - else, log the fetched posting list in the log file by calling the same function printPostingList
+    *
+    *
+    *
+    *
+    *
+    * */
+
+
     public static void termAtATimeQueryAnd( String[] termList, HashMap< String, LinkedList<Document>> termMap, HashMap< String, LinkedList<Document>> documentMap, Log logger ) {
 
         try {
+
+            double startTime = System.currentTimeMillis();
 
             ArrayList<LinkedList<Document>> list = new ArrayList<>();
 
             int noOfDocs = 0;
             int noOfComparisons = 0;
-            int noOfSeconds = 0;
+            double noOfSeconds;
 
             LinkedList<Document> postingListTerm = new LinkedList<>();
 
@@ -97,27 +114,36 @@ public class QueryBuilder {
                 }
 
             }
-            
+
 
 
             if ( postingListTerm != null ) {
 
                 LinkedList<Document> termFilterPostingList = list.get(0);
-                ListIterator<Document> filterPostingListIterator = termFilterPostingList.listIterator();
 
-                System.out.println( termFilterPostingList.size() );
+                LinkedList<Document> resultSetList = new LinkedList<>();
+
+                for ( int n = 0; n < termFilterPostingList.size(); n++ ) {
+
+                    resultSetList.add(termFilterPostingList.get(n));
+
+                }
+
+                ListIterator<Document> resultSetListIterator = resultSetList.listIterator();
+
+                //System.out.println( resultSetList.size() );
 
                 for ( int i = 1; i < list.size(); i++ ) {
 
                     ListIterator<Document> arrayListLinkedListIterator = list.get(i).listIterator();
 
-                    while ( filterPostingListIterator.hasNext() ) {
+                    while ( resultSetListIterator.hasNext() ) {
 
                         while ( arrayListLinkedListIterator.hasNext() ) {
 
                             noOfComparisons++;
 
-                            int v = filterPostingListIterator.next().documentId;
+                            int v = resultSetListIterator.next().documentId;
 
                             if ( v  == arrayListLinkedListIterator.next().documentId ) {
 
@@ -126,13 +152,13 @@ public class QueryBuilder {
 
                             } else   {
 
-                                filterPostingListIterator.previous();
+                                resultSetListIterator.previous();
 
                             }
 
                             if ( !arrayListLinkedListIterator.hasNext() ) {
 
-                                filterPostingListIterator.remove();
+                                resultSetListIterator.remove();
                                 arrayListLinkedListIterator = list.get(i).listIterator();
                                 break;
 
@@ -144,31 +170,146 @@ public class QueryBuilder {
 
                 }
 
-                noOfDocs = termFilterPostingList.size();
+                double endTime = System.currentTimeMillis();
+
+                noOfSeconds = ( endTime - startTime )/1000;
+
+                noOfDocs = resultSetList.size();
+
+                String sortedList = QueryBuilder.sortedFinalTermList( resultSetList );
 
                 String displayTermList = QueryBuilder.getStringTerm( termList );
                 logger.log("FUNCTION: termAtATimeQueryAnd " + displayTermList);
                 logger.log( noOfDocs + " documents are found" );
                 logger.log( noOfComparisons + " comparisons are made");
                 logger.log( noOfSeconds + " seconds are used");
-                //logger.log( "Result: " + listOfReorderedDocIds);
+                logger.log( "Result: " + sortedList);
 
 
             } else {
 
-                String displayTermList = QueryBuilder.getStringTerm( termList );
+                String displayTermList = QueryBuilder.getStringTerm(termList);
                 logger.log("FUNCTION: termAtATimeQueryAnd " + displayTermList);
                 logger.log("terms not found");
 
             }
 
 
-//            for ( int i =0 ; i < termFilterPostingList.size(); i++ ) {
-//
-//                System.out.println(termFilterPostingList.get( i ).documentId + "," +termFilterPostingList.get( i ).term_frequency);
-//
-//            }
+        } catch ( Exception e ) {
 
+            throw e;
+
+        }
+
+
+    }
+
+    /*
+    * Algorithm for TAAT OR
+    *
+    *
+    *
+    *
+    * */
+
+    public static void termAtATimeQueryOr( String[] termList, HashMap< String, LinkedList<Document>> termMap, Log logger ) {
+
+
+        try {
+
+            int noOfDocs = 0;
+            int noOfComparisons = 0;
+            double noOfSeconds;
+
+            double startTime = System.currentTimeMillis();
+
+            ArrayList<LinkedList<Document>> list = new ArrayList<>();
+
+            for ( String s: termList ) {
+
+                LinkedList<Document> postingListTerm = getPostingList( termMap, s );
+
+                if ( postingListTerm != null ) {
+
+                    list.add( postingListTerm );
+
+                }
+            }
+
+            int flag = 0;
+
+
+            if ( list.size() != 0 ) {
+
+                LinkedList<Document> termFilterPostingList = list.get( 0 );
+                LinkedList<Document> resultSetList = new LinkedList<>();
+
+                for ( int n = 0; n < termFilterPostingList.size(); n++ ) {
+
+                    resultSetList.add(termFilterPostingList.get(n));
+
+                }
+
+                //System.out.println( resultSetList.size() );
+
+
+                for ( int i = 1; i < list.size(); i++ ) {
+
+                    ListIterator<Document> arrayListLinkedListIterator = list.get(i).listIterator();
+
+                    while ( arrayListLinkedListIterator.hasNext() ) {
+
+                        Document c = arrayListLinkedListIterator.next();
+
+                        //if not already exists then add
+                        for ( int j = 0 ; j < resultSetList.size(); j++ ) {
+
+                            if (c.documentId.equals(resultSetList.get(j).documentId)) {
+
+                                flag = 1;
+                                noOfComparisons++;
+                                break;
+
+                            }
+                            flag = 0;
+                        }
+
+
+                        if ( flag == 0 ) {
+
+                            resultSetList.add( c );
+
+                        }
+
+
+                    }
+
+                }
+
+                double endTime = System.currentTimeMillis();
+
+                noOfSeconds = ( endTime - startTime )/1000;
+
+
+
+                noOfDocs = resultSetList.size();
+                String sortedList = QueryBuilder.sortedFinalTermList( resultSetList );
+                String displayTermList = QueryBuilder.getStringTerm( termList );
+                logger.log("FUNCTION: termAtATimeQueryOr " + displayTermList);
+                logger.log( noOfDocs + " documents are found" );
+                logger.log( noOfComparisons + " comparisons are made");
+                logger.log( noOfSeconds + " seconds are used");
+                logger.log( "Result: " + sortedList);
+
+
+
+            } else {
+
+                String displayTermList = QueryBuilder.getStringTerm(termList);
+                logger.log("FUNCTION: termAtATimeQueryOr " + displayTermList);
+                logger.log("terms not found");
+
+            }
 
 
 
@@ -181,17 +322,20 @@ public class QueryBuilder {
 
     }
 
-    public static void termAtATimeQueryOr( String[] termList, HashMap< String, LinkedList<Document>> termMap ) {
+    /*public static void termAtATimeQueryOr( String[] termList, HashMap< String, LinkedList<Document>> termMap ) {
 
 
         try {
+
+            int noOfDocs = 0;
+            int noOfComparisons = 0;
 
             ArrayList<LinkedList<Document>> list = new ArrayList<>();
 
             for ( String s: termList ) {
 
                 LinkedList<Document> postingListTerm = getPostingList( termMap, s );
-                //if list doesn't exist
+
                 list.add( postingListTerm );
             }
 
@@ -246,9 +390,9 @@ public class QueryBuilder {
         }
 
 
-    }
+    }*/
 
-    public static void documentAtATimeQueryAnd( String[] termList, HashMap< String, LinkedList<Document>> documentMap ) {
+    /*public static void documentAtATimeQueryAnd( String[] termList, HashMap< String, LinkedList<Document>> documentMap ) {
 
         try {
 
@@ -291,11 +435,6 @@ public class QueryBuilder {
 
 
 
-
-
-
-
-
         } catch ( Exception e ) {
 
             e.printStackTrace();
@@ -303,7 +442,7 @@ public class QueryBuilder {
         }
 
 
-    }
+    }*/
 
 
 
@@ -427,9 +566,33 @@ public class QueryBuilder {
         }
         return str;
 
-        //return str.substring(0,str.length()-1);
     }
 
+    public static String sortedFinalTermList ( LinkedList<Document> postingListTerm ) {
+
+        String sortedDocIdList = "";
+
+        ArrayList<Integer> resultSetID = new ArrayList<>();
+
+        for ( int n = 0; n < postingListTerm.size(); n++ ) {
+
+            resultSetID.add(postingListTerm.get(n).documentId);
+
+        }
+
+        Collections.sort( resultSetID );
+
+        for ( Integer docID : resultSetID ) {
+
+            sortedDocIdList += Integer.toString( docID) + ",";
+
+        }
+
+        String str = removeLastChar( sortedDocIdList );
+
+        return str;
+
+    }
 
 
 

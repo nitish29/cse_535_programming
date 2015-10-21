@@ -1,6 +1,5 @@
 package ir_project;
 
-import java.text.Collator;
 import java.util.*;
 
 public class IndexBuilder {
