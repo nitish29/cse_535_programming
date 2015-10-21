@@ -5,16 +5,9 @@ import java.io.FileReader;
 import java.util.*;
 
 /*
-    In Loop:
-    * read single keyword line
-    * get all the query terms in a string array for the fetched line
-    * loop over the terms in the string array
-    * store each posting in an array list
-    * TAATAnd logic
-        *
-
-    -
-
+    This class logs the top K terms based on user input
+    It also logs the postings list for each term
+    and finally it also logs the boolean model operations (TAAT AND, TAAT OR ) requested
 
  */
 
@@ -22,6 +15,7 @@ public class QueryBuilder {
 
 
 
+    // this function is used to delegate the
     public static void executeQuery( String queryFileName, HashMap< String, LinkedList<Document>> termMap, HashMap< String, LinkedList<Document>> documentMap, ArrayList<TopKTerm> sortedTopKTermList, int topKInputValue, Log logger ) {
 
         try {
@@ -32,18 +26,15 @@ public class QueryBuilder {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
 
             //execute topK over here
-            //TODO : method displaying concatenated strings
-            QueryBuilder.printTopKTerms(sortedTopKTermList, topKInputValue, logger);
+            QueryBuilder.printTopKTerms(sortedTopKTermList, topKInputValue, logger); // call to this function executes the top K term query
 
 
             while ((line = bufferedReader.readLine()) != null) {
 
                 termList = FetchLineData(line);
 
-                QueryBuilder.termAtATimeQueryAnd( termList, termMap,documentMap, logger );
-                QueryBuilder.termAtATimeQueryOr(termList, termMap, logger);
-                //QueryBuilder.documentAtATimeQueryAnd(termList, documentMap);
-
+                QueryBuilder.termAtATimeQueryAnd( termList, termMap,documentMap, logger ); // call to this function executes TAAT And query
+                QueryBuilder.termAtATimeQueryOr(termList, termMap, logger); // call to this function executes TAAT Or query
 
 
             }
@@ -59,6 +50,7 @@ public class QueryBuilder {
 
     }
 
+    //split the line fetched from the query file, to get the terms to be queried against
     public static String[] FetchLineData(String line) {
 
         String[] terms = line.split(" ");
@@ -67,21 +59,14 @@ public class QueryBuilder {
 
     }
 
-    /*
-    * Algorithm for TAAT And
-    *
-    * Iterate over the list of terms passed - [ termList contains list of terms passed from executeQuery function call]
-    * fetch the posting list for each term and print it
-    *  - if the term doesn't exist, or is the posting list is empty - null value, call the printPostingList function ( which prints term not found )
-    *  - else, log the fetched posting list in the log file by calling the same function printPostingList
-    *
-    *
-    *
-    *
-    *
-    * */
 
-
+    //this function executes the TAAT And query, and prints the result in a log file
+    // it generates an array list of all the posting list
+    // it make a result set array list that would contain the final answer for all the terms entered
+    // result set array list contains an initial list - ( the posting list at index 0 of array list)
+    // every element in the result set array list is compared with all the other array lists elements starting from index 1
+    // if the element is not found in the other array list, it is removed
+    // final answer is the truncated result set array list
     public static void termAtATimeQueryAnd( String[] termList, HashMap< String, LinkedList<Document>> termMap, HashMap< String, LinkedList<Document>> documentMap, Log logger ) {
 
         try {
@@ -125,13 +110,13 @@ public class QueryBuilder {
 
                 for ( int n = 0; n < termFilterPostingList.size(); n++ ) {
 
+                    // make an initial result set final list that would contain the final answer
                     resultSetList.add(termFilterPostingList.get(n));
 
                 }
 
                 ListIterator<Document> resultSetListIterator = resultSetList.listIterator();
 
-                //System.out.println( resultSetList.size() );
 
                 for ( int i = 1; i < list.size(); i++ ) {
 
@@ -204,14 +189,8 @@ public class QueryBuilder {
 
     }
 
-    /*
-    * Algorithm for TAAT OR
-    *
-    *
-    *
-    *
-    * */
 
+    //this function executes the TAAT - Or query and prints the result in a log file
     public static void termAtATimeQueryOr( String[] termList, HashMap< String, LinkedList<Document>> termMap, Log logger ) {
 
 
@@ -225,6 +204,7 @@ public class QueryBuilder {
 
             ArrayList<LinkedList<Document>> list = new ArrayList<>();
 
+            //fetch posting list for each term and store all these posting list in an array list
             for ( String s: termList ) {
 
                 LinkedList<Document> postingListTerm = getPostingList( termMap, s );
@@ -244,28 +224,30 @@ public class QueryBuilder {
                 LinkedList<Document> termFilterPostingList = list.get( 0 );
                 LinkedList<Document> resultSetList = new LinkedList<>();
 
+
+                //make an initial result set list that will contain the final answer
                 for ( int n = 0; n < termFilterPostingList.size(); n++ ) {
 
                     resultSetList.add(termFilterPostingList.get(n));
 
                 }
 
-                //System.out.println( resultSetList.size() );
-
-
                 for ( int i = 1; i < list.size(); i++ ) {
 
+                    //use an iterator to traverse over other array list element starting from index 1
                     ListIterator<Document> arrayListLinkedListIterator = list.get(i).listIterator();
 
                     while ( arrayListLinkedListIterator.hasNext() ) {
 
                         Document c = arrayListLinkedListIterator.next();
 
-                        //if not already exists then add
+                        //this for loop checks whether the document from the array list already exists in the result set or not
+
                         for ( int j = 0 ; j < resultSetList.size(); j++ ) {
 
                             if (c.documentId.equals(resultSetList.get(j).documentId)) {
 
+                                //if the document already exists, do not add it
                                 flag = 1;
                                 noOfComparisons++;
                                 break;
@@ -289,8 +271,6 @@ public class QueryBuilder {
                 double endTime = System.currentTimeMillis();
 
                 noOfSeconds = ( endTime - startTime )/1000;
-
-
 
                 noOfDocs = resultSetList.size();
                 String sortedList = QueryBuilder.sortedFinalTermList( resultSetList );
@@ -321,6 +301,163 @@ public class QueryBuilder {
 
 
     }
+
+
+    // This function fetches the posting list for a particular term
+    public static LinkedList<Document> getPostingList( HashMap< String, LinkedList<Document>> map, String term ) {
+
+        LinkedList<Document> postingList = map.get( term );
+
+        if ( postingList == null ) {
+
+            return null;
+
+        } else {
+
+
+            return postingList;
+
+        }
+
+
+
+    }
+
+
+    //This function prints the TOP K terms requested in the log file
+    public static void printTopKTerms( ArrayList<TopKTerm> sortedTopKTermList, int topKInputValue, Log logger ) {
+
+        String topKList = "";
+
+        for ( int i = 0; i < topKInputValue; i++ ) {
+
+            topKList += sortedTopKTermList.get(i).term + ",";
+
+
+        }
+
+        String str = removeLastChar( topKList );
+        logger.log("FUNCTION: getTopK " + topKInputValue);
+        logger.log("Result: " + str);
+
+    }
+
+    //This function converts all the terms to a string - all separated by commas (used for displaying data in log file)
+    public static String getStringTerm ( String[] termList ) {
+
+        String stringTerm="";
+
+        for ( String s: termList ) {
+
+            stringTerm += s + ",";
+        }
+
+        String str = removeLastChar( stringTerm );
+
+        return str;
+
+
+    }
+
+
+    // This function prints the posting in the log file pertaining to a term
+    public static void printPostingList ( String s, LinkedList<Document> postingListTerm, LinkedList<Document> postingListDoc, Log logger) {
+
+
+        try {
+
+
+            if ( postingListDoc == null ) {
+
+                logger.log("FUNCTION: getPostings " + s);
+                logger.log("term not found");
+
+
+            } else if ( (postingListDoc.size() == 0) && (postingListTerm.size() == 0) ) {
+
+                logger.log("FUNCTION: getPostings " + s);
+                logger.log("term not found");
+
+
+            } else {
+
+                String orderedByDocID = "";
+                String orderedByTermFreq = "";
+
+
+                for ( int i =0 ; i < postingListDoc.size(); i++ ) {
+
+                    orderedByDocID += postingListDoc.get(i).documentId + ",";
+
+                }
+
+                for ( int i =0 ; i < postingListTerm.size(); i++ ) {
+
+                    orderedByTermFreq += postingListTerm.get(i).documentId + ",";
+
+                }
+
+
+                String strDoc = removeLastChar( orderedByDocID );
+                String strTerm = removeLastChar( orderedByTermFreq );
+                logger.log("FUNCTION: getPostings " + s);
+                logger.log("Ordered by doc IDs: " + strDoc);
+                logger.log("Ordered by TF: " + strTerm);
+
+
+            }
+
+
+
+
+        } catch ( Exception e ) {
+
+            e.printStackTrace();
+
+        }
+
+
+    }
+
+    // this function removes the last trailing comma from each string generated, which is going to be printed in the log file
+    private static String removeLastChar(String str) {
+
+        if (str.length() > 0 && str.charAt(str.length()-1)== ',') {
+            str = str.substring(0, str.length()-1);
+        }
+        return str;
+
+    }
+
+
+    // this function reorders the final term list which is displayed for TAAT - OR and TAAT AND and concatenates all the terms to a string type
+    public static String sortedFinalTermList ( LinkedList<Document> postingListTerm ) {
+
+        String sortedDocIdList = "";
+
+        ArrayList<Integer> resultSetID = new ArrayList<>();
+
+        for ( int n = 0; n < postingListTerm.size(); n++ ) {
+
+            resultSetID.add(postingListTerm.get(n).documentId);
+
+        }
+
+        Collections.sort( resultSetID );
+
+        for ( Integer docID : resultSetID ) {
+
+            sortedDocIdList += Integer.toString( docID) + ",";
+
+        }
+
+        String str = removeLastChar( sortedDocIdList );
+
+        return str;
+
+    }
+
+    /******************** Incomplete functions below - Please Ingore *******************************************************/
 
     /*public static void termAtATimeQueryOr( String[] termList, HashMap< String, LinkedList<Document>> termMap ) {
 
@@ -443,157 +580,6 @@ public class QueryBuilder {
 
 
     }*/
-
-
-
-    public static LinkedList<Document> getPostingList( HashMap< String, LinkedList<Document>> map, String term ) {
-
-        LinkedList<Document> postingList = map.get( term );
-
-        if ( postingList == null ) {
-
-            return null;
-
-        } else {
-
-
-            return postingList;
-
-        }
-
-
-
-    }
-
-
-    public static void printTopKTerms( ArrayList<TopKTerm> sortedTopKTermList, int topKInputValue, Log logger ) {
-
-        String topKList = "";
-
-        for ( int i = 0; i < topKInputValue; i++ ) {
-
-            topKList += sortedTopKTermList.get(i).term + ",";
-
-
-        }
-
-        String str = removeLastChar( topKList );
-        logger.log("FUNCTION: getTopK " + topKInputValue);
-        logger.log("Result: " + str);
-
-    }
-
-    public static String getStringTerm ( String[] termList ) {
-
-        String stringTerm="";
-
-        for ( String s: termList ) {
-
-            stringTerm += s + ",";
-        }
-
-        String str = removeLastChar( stringTerm );
-
-        return str;
-
-
-    }
-
-
-    public static void printPostingList ( String s, LinkedList<Document> postingListTerm, LinkedList<Document> postingListDoc, Log logger) {
-
-
-
-        try {
-
-
-            if ( postingListDoc == null ) {
-
-                logger.log("FUNCTION: getPostings " + s);
-                logger.log("term not found");
-
-
-            } else if ( (postingListDoc.size() == 0) && (postingListTerm.size() == 0) ) {
-
-                logger.log("FUNCTION: getPostings " + s);
-                logger.log("term not found");
-
-
-            } else {
-
-                String orderedByDocID = "";
-                String orderedByTermFreq = "";
-
-
-                for ( int i =0 ; i < postingListDoc.size(); i++ ) {
-
-                    orderedByDocID += postingListDoc.get(i).documentId + ",";
-
-                }
-
-                for ( int i =0 ; i < postingListTerm.size(); i++ ) {
-
-                    orderedByTermFreq += postingListTerm.get(i).documentId + ",";
-
-                }
-
-
-                String strDoc = removeLastChar( orderedByDocID );
-                String strTerm = removeLastChar( orderedByTermFreq );
-                logger.log("FUNCTION: getPostings " + s);
-                logger.log("Ordered by doc IDs: " + strDoc);
-                logger.log("Ordered by TF: " + strTerm);
-
-
-            }
-
-
-
-
-        } catch ( Exception e ) {
-
-            e.printStackTrace();
-
-        }
-
-
-    }
-
-    private static String removeLastChar(String str) {
-
-        if (str.length() > 0 && str.charAt(str.length()-1)== ',') {
-            str = str.substring(0, str.length()-1);
-        }
-        return str;
-
-    }
-
-    public static String sortedFinalTermList ( LinkedList<Document> postingListTerm ) {
-
-        String sortedDocIdList = "";
-
-        ArrayList<Integer> resultSetID = new ArrayList<>();
-
-        for ( int n = 0; n < postingListTerm.size(); n++ ) {
-
-            resultSetID.add(postingListTerm.get(n).documentId);
-
-        }
-
-        Collections.sort( resultSetID );
-
-        for ( Integer docID : resultSetID ) {
-
-            sortedDocIdList += Integer.toString( docID) + ",";
-
-        }
-
-        String str = removeLastChar( sortedDocIdList );
-
-        return str;
-
-    }
-
 
 
 

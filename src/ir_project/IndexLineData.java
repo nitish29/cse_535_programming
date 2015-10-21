@@ -2,9 +2,8 @@ package ir_project;
 
 import java.util.LinkedList;
 
-/**
- * Created by nitish on 10/14/15.
- */
+
+
 public class IndexLineData {
 
     public String term;

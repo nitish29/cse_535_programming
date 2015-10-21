@@ -4,6 +4,14 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+/*
+* This is a Logger class, basically for logging data
+* the method log handles the file write operations
+* it opens a filewriter (the log file name is captured from the main function)
+* it appends all the data written to it
+* and once the data has been written to the log file, the open file writer connection is closed.
+* */
+
 public class Log {
 
 

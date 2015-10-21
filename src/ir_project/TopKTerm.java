@@ -1,8 +1,5 @@
 package ir_project;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
 public class TopKTerm {
 
     String term;
